@@ -3527,8 +3527,11 @@ if [ -z "$GATEWAY_INTERFACE" ]; then
 
         getvars $2
         checkinternet
-        getlatestrploader
+        #getlatestrploader
         gitdownload
+
+        # 拷贝修改后的file.sh到/redpill-load目录
+        sudo cp ./file.sh ./redpill-load/include/
 
         [ "$3" = "withfriend" ] && echo "withfriend option set, My friend will be added" && WITHFRIEND="YES"
 
