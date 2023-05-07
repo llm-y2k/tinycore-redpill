@@ -1188,7 +1188,7 @@ function postupdatev1() {
     fi
 
     echo "Clearing last created loader "
-    rm -f redpill-load/loader.img
+    # rm -f redpill-load/loader.img
 
     if [ ! -d "/lib64" ]; then
         echo "/lib64 does not exist, bringing linking /lib"
