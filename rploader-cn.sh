@@ -33,9 +33,11 @@ acc_url="https://baidu.llm1978.tk/"
 # 网址重定向函数
 function curlx() {
     TMPURL="$*"
-    TMPURL=${TMPURL/"https://raw.githubusercontent.com/"/${acc_url}"https://raw.githubusercontent.com/"}
-    TMPURL=${TMPURL/"https://github.com"/${acc_url}"https://raw.githubusercontent.com"}
-    TMPURL=${TMPURL/"/raw/"/"/"}
+    if [[ $TMPURL != *"synology.com"* ]]; then
+        TMPURL=${TMPURL/"https://raw.githubusercontent.com/"/${acc_url}"https://raw.githubusercontent.com/"}
+        TMPURL=${TMPURL/"https://github.com"/${acc_url}"https://raw.githubusercontent.com"}
+        TMPURL=${TMPURL/"/raw/"/"/"}
+    fi
     TMPURL="curl ""${TMPURL}"
     ${TMPURL}
 }
