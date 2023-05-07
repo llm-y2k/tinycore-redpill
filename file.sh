@@ -297,14 +297,8 @@ rpt_download_remote()
     # github加速网址，可自行修改
     acc_url="https://baidu.llm1978.tk/"
 
-    # 网址重定向函数
-    TMPURL="$URL"
-    TMPURL=${TMPURL/"https://raw.githubusercontent.com/"/${acc_url}"https://raw.githubusercontent.com/"}
-    TMPURL=${TMPURL/"https://github.com"/${acc_url}"https://raw.githubusercontent.com"}
-    TMPURL=${TMPURL/"/raw/"/"/"}
-
     local out;
-    out=$("${CURL_PATH}" --location --fail --progress-bar --retry 5 --output "${2}" "${TMPURL}")
+    out=$("${CURL_PATH}" --location --fail --progress-bar --retry 5 --output "${2}" "${acc_url}""${1}")
     if [ $? -ne 0 ]; then
       if [[ "${3}" -eq 1 ]]; then
         pr_crit "Failed to download %s to %s\n\n%s" "${1}" "${2}" "${out}"
@@ -313,6 +307,8 @@ rpt_download_remote()
       fi
     fi
 }
+
+
 
 # Lists directories in a path
 #

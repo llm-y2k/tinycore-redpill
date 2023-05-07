@@ -2799,7 +2799,7 @@ function gitdownload() {
         git pull
         cd /home/tc
     else
-        git clone -b $LKM_BRANCH "$LKM_SOURCE_URL"
+        git clone -b $LKM_BRANCH ${acc_url}"$LKM_SOURCE_URL"
     fi
 
     if [ -d redpill-load ]; then
@@ -2808,7 +2808,7 @@ function gitdownload() {
         git pull
         cd /home/tc
     else
-        git clone -b $LD_BRANCH "$LD_SOURCE_URL"
+        git clone -b $LD_BRANCH ${acc_url}"$LD_SOURCE_URL"
     fi
 
 }
