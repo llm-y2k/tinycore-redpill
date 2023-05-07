@@ -29,6 +29,10 @@ jobs:
         run: |
           mkdir /opt/tinycore-redpill
           cd /opt/tinycore-redpill
+          
+          git clone https://github.com/pocopico/redpill-load.git
+          git clone https://github.com/pocopico/redpill-lkm.git
+
           cp -rfp /home/runner/work/tinycore-redpill/tinycore-redpill/* .
           cp -rfp /opt/config-files/redpill-load/config /opt/tinycore-redpill
           sudo find . -type f -name "*.sh" -exec chmod +x {} \;
