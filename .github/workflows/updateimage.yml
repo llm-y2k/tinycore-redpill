@@ -30,7 +30,7 @@ jobs:
           mkdir /opt/tinycore-redpill
           cd /opt/tinycore-redpill
           
-          git clone https://github.com/pocopico/redpill-load.git
+          git clone -b develop https://github.com/pocopico/redpill-load.git
           git clone https://github.com/pocopico/redpill-lkm.git
 
           cp -rfp /home/runner/work/tinycore-redpill/tinycore-redpill/* .
