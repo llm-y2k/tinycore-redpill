@@ -3759,8 +3759,8 @@ if [ -z "$GATEWAY_INTERFACE" ]; then
         ;;
 
     update)
-        checkinternet
-        getlatestrploader
+        #checkinternet
+        #getlatestrploader
         ;;
 
     listmods)
