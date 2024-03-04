@@ -27,6 +27,21 @@ userconfigfile="/home/tc/user_config.json"
 CUSTOMCONFIG="/home/tc/custom_config.json"
 HOMEPATH="/home/tc"
 fullupdatefiles="${CUSTOMCONFIG} custom_config.json custom_config_jun.json global_config.json modules.alias.3.json.gz modules.alias.4.json.gz rpext-index.json user_config.json rploader.sh"
+############### Date : 240227 ########################################################################
+# github加速网址，可自行修改
+acc_url="https://baidu.llm1978.tk/"
+
+# 网址重定向函数
+function curlx() {
+    TMPURL="$*"
+    if [[ $TMPURL != *"synology"* ]]; then
+        TMPURL=${TMPURL/"https://raw.githubusercontent.com/"/${acc_url}"https://raw.githubusercontent.com/"}
+        TMPURL=${TMPURL/"https://github.com"/${acc_url}"https://raw.githubusercontent.com"}
+        TMPURL=${TMPURL/"/raw/"/"/"}
+    fi
+    TMPURL="curl ""${TMPURL}"
+    ${TMPURL}
+}
 
 # END Do not modify after this line
 ######################################################################################################
@@ -214,7 +229,7 @@ function extremove() {
 
 function extvars() {
 
-    ext="$(curl --insecure --silent --location $1)"
+    ext="$(curlx --insecure --silent --location $1)"
     platform="$2"
     [ $(echo $ext | grep 404 | wc -l) -eq 1 ] && echo "Extension not found" && exit 1
     if [ -f platform ] && [ ! "$(cat platform)" == "$platform" ]; then
@@ -226,7 +241,7 @@ function extvars() {
     fi
 
     extid="$(echo $ext | jq -r -e .id)"
-    extrelease="$(curl --insecure --silent --location $extcontents)"
+    extrelease="$(curlx --insecure --silent --location $extcontents)"
 
     [ $(echo $extrelease | jq . | wc -l) -eq 0 ] && echo "Extension does not contain information about platform $2" && exit 1
 
@@ -253,7 +268,7 @@ function processexts() {
             download=$(echo $extrelease | jq -r -e ".files[] | select(.name | contains(\"$file\")) .url")
             modules="$(echo $extrelease | jq -r -e '.kmods')"
             echo " Downloading : $name "
-            cd $extid && curl --insecure --silent --location $download -O && cd ..
+            cd $extid && curlx --insecure --silent --location $download -O && cd ..
 
             packed=$(echo $extrelease | jq -r -e ".files[] | select(.name | contains(\"$file\")) .packed")
 
@@ -652,7 +667,7 @@ function downloadextractor() {
             echo "Processing old pat file to extract required files for extraction"
             tar -C${temp_folder} -xf /${patfile} rd.gz
         else
-            curl --insecure --location https://global.download.synology.com/download/DSM/release/7.0.1/42218/DSM_DS3622xs%2B_42218.pat --output /home/tc/oldpat.tar.gz
+            curlx --insecure --location https://global.download.synology.com/download/DSM/release/7.0.1/42218/DSM_DS3622xs%2B_42218.pat --output /home/tc/oldpat.tar.gz
             [ -f /home/tc/oldpat.tar.gz ] && tar -C${temp_folder} -xf /home/tc/oldpat.tar.gz rd.gz
         fi
 
@@ -794,7 +809,7 @@ function processpat() {
             exit 99
         fi
 
-        [ -n $pat_url ] && curl --insecure --location ${pat_url} -o "/${local_cache}/${SYNOMODEL}.pat"
+        [ -n $pat_url ] && curlx --insecure --location ${pat_url} -o "/${local_cache}/${SYNOMODEL}.pat"
         patfile="/${local_cache}/${SYNOMODEL}.pat"
         if [ -f ${patfile} ]; then
             testarchive ${patfile}
@@ -1202,7 +1217,7 @@ function postupdatev1() {
 
         echo "bspatch does not exist, bringing over from repo"
 
-        curl --insecure --location "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/tools/bspatch" -O
+        curlx --insecure --location "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/tools/bspatch" -O
 
         chmod 777 bspatch
         sudo mv bspatch /usr/local/bin/
@@ -1371,7 +1386,7 @@ function removebundledexts() {
 
     echo "Removing bundled exts directories"
     for bundledext in $(grep ":" bundled-exts.json | awk '{print $2}' | sed -e 's/"//g' | sed -e 's/,/\n/g'); do
-        bundledextdir=$(curl --insecure --location -s "$bundledext" | jq -r -e '.id')
+        bundledextdir=$(curlx --insecure --location -s "$bundledext" | jq -r -e '.id')
         if [ -d /home/tc/redpill-load/custom/extensions/${bundledextdir} ]; then
             echo "Removing : ${bundledextdir}"
             sudo rm -rf /home/tc/redpill-load/custom/extensions/${bundledextdir}
@@ -1440,8 +1455,8 @@ function downloadextractorv2() {
         sudo rm -rf ../oldpat.tar.gz
         sudo rm -rf hda1.tgz
 
-        curl --insecure --silent --location https://github.com/pocopico/tinycore-redpill/blob/main/tools/xxd?raw=true --output xxd
-
+     #  curlx --insecure --location https://github.com/pocopico/tinycore-redpill/raw/main/tools/xxd --output xxd
+        cp /home/tc/xxd /home/tc/patch-extractor/
         chmod +x xxd
 
         ./xxd synoarchive | sed -e 's/000039f0: 0300/000039f0: 0100/' | ./xxd -r >synoarchive.nano
@@ -1491,11 +1506,11 @@ function downloadupgradepat() {
         echo "Selected model : ${model} "
 
         PS3="Select update version : "
-        select version in $(curl --insecure --silent https://archive.synology.com/download/Os/DSM/ | grep "/download/Os/DSM/7" | awk '{print $2}' | awk -F\/ '{print $5}' | sed -e 's/"//g'); do
+        select version in $(curlx --insecure --silent https://archive.synology.com/download/Os/DSM/ | grep "/download/Os/DSM/7" | awk '{print $2}' | awk -F\/ '{print $5}' | sed -e 's/"//g'); do
             echo "Selected version : $version"
             selectedmodel=$(echo $model | sed -e 's/DS//g' | sed -e 's/RS//g' | sed -e 's/DVA//g' | sed -e 's/+//g')
             PS3="Select pat file URL : "
-            select patfile in $(curl --insecure --silent "https://archive.synology.com/download/Os/DSM/${version}" | grep href | grep -i $selectedmodel | awk '{print $2}' | sed -e 's/href=//g'); do
+            select patfile in $(curlx --insecure --silent "https://archive.synology.com/download/Os/DSM/${version}" | grep href | grep -i $selectedmodel | awk '{print $2}' | sed -e 's/href=//g'); do
 
                 patfile="$(echo $patfile | sed -e 's/"//g')"
                 echo "Selected patfile :  $patfile "
@@ -1503,7 +1518,7 @@ function downloadupgradepat() {
                 updatepat="/home/tc/${model}_${patfilever}.pat"
 
                 echo "Downloading PAT file "
-                curl --insecure --progress-bar -L "$patfile" -o $updatepat
+                curlx --insecure --progress-bar -L "$patfile" -o $updatepat
 
                 [ -f $updatepat ] && echo "Downloaded Patfile $updatepat "
 
@@ -1805,7 +1820,7 @@ function patchdtc() {
     fi
 
     echo "Downloading dtc binary"
-    curl --insecure --location --progress-bar "$dtcbin" -O
+    curlx --insecure --location --progress-bar "$dtcbin" -O
     chmod 700 dtc
 
     if [ -f /home/tc/custom-module/${dtbfile}.dts ] && [ ! -f /home/tc/custom-module/${dtbfile}.dtb ]; then
@@ -1847,7 +1862,7 @@ function patchdtc() {
 
     if [ ! -f ${dtbfile}.dts ]; then
         echo "dts file for ${dtbfile} not found, trying to download"
-        curl --insecure --location --progress-bar -O "${dtsfiles}/${dtbfile}.dts"
+        curlx --insecure --location --progress-bar -O "${dtsfiles}/${dtbfile}.dts"
     fi
 
     echo "Found $(echo $localdisks | wc -w) disks and $(echo $localnvme | wc -w) nvme"
@@ -2581,7 +2596,7 @@ function gettoolchain() {
         echo "File already cached"
     else
         echo "Downloading and caching toolchain"
-        curl --insecure --progress-bar --location "${TOOLKIT_URL}" --output dsm-toolchain.7.0.txz
+        curlx --insecure --progress-bar --location "${TOOLKIT_URL}" --output dsm-toolchain.7.0.txz
     fi
 
     echo -n "Checking file -> "
@@ -2620,7 +2635,7 @@ function readConfig() {
 
     if [ ! -e ${CUSTOMCONFIG} ]; then
         echo "Custom config file not found, using default"
-        curl --insecure -L ${rploaderrepo}/custom_config2.json --output ${CUSTOMCONFIG}
+        curlx --insecure -L ${rploaderrepo}/custom_config2.json --output ${CUSTOMCONFIG}
         #cat global_config.json
     else
         jq -s '.[0].build_configs=(.[1].build_configs + .[0].build_configs | unique_by(.id)) | .[0]' custom_config_jun.json ${CUSTOMCONFIG}
@@ -2652,7 +2667,7 @@ function getsynokernel() {
         rm -rf synokernel.txz
     else
         echo "Downloading and caching synokernel"
-        cd /home/tc && curl --insecure --progress-bar --location ${SYNOKERNEL_URL} --output synokernel.txz
+        cd /home/tc && curlx --insecure --progress-bar --location ${SYNOKERNEL_URL} --output synokernel.txz
         checkfilechecksum synokernel.txz ${SYNOKERNEL_SHA}
         echo "OK, file matches sha256sum, extracting"
         echo "Extracting synokernel"
@@ -2940,7 +2955,7 @@ function getstaticmodule() {
     echo "Removing any old redpill.ko modules"
     [ -f /home/tc/redpill.ko ] && rm -f /home/tc/redpill.ko
 
-    extension=$(curl --insecure -s --location "$redpillextension")
+    extension=$(curlx --insecure -s --location "$redpillextension")
 
     setplatform
 
@@ -2948,11 +2963,11 @@ function getstaticmodule() {
 
     #release=`echo $extension |  jq -r '.releases .${SYNOMODEL}_{$TARGET_REVISION}'`
     release=$(echo $extension | jq -r -e --arg SYNOMODEL $SYNOMODEL '.releases[$SYNOMODEL]')
-    files=$(curl --insecure -s --location "$release" | jq -r '.files[] .url')
+    files=$(curlx --insecure -s --location "$release" | jq -r '.files[] .url')
 
     for file in $files; do
         echo "Getting file $file"
-        curl --insecure -s -O $file
+        curlx --insecure -s -O $file
         if [ -f redpill*.tgz ]; then
             echo "Extracting module"
             tar xf redpill*.tgz
@@ -3184,7 +3199,8 @@ function buildloader() {
     sudo losetup -D
 
     echo "Cleaning up files"
-    sudo rm -rf /home/tc/rd.temp /home/tc/friend /home/tc/redpill-load/loader.img /home/tc/cache/*pat
+    #sudo rm -rf /home/tc/rd.temp /home/tc/friend /home/tc/redpill-load/loader.img /home/tc/cache/*pat
+    sudo rm -rf /home/tc/rd.temp /home/tc/friend /home/tc/cache/*pat
 
     echo "Caching files for future use"
     [ ! -d ${local_cache} ] && mkdir ${local_cache}
@@ -3213,8 +3229,8 @@ function bringoverfriend() {
     [ ! -d /home/tc/friend ] && mkdir /home/tc/friend/ && cd /home/tc/friend
 
     #URLS=$(curl --insecure -s https://api.github.com/repos/pocopico/tcrpfriend/releases/latest | jq -r ".assets[] | select(.name | contains(\"${initrd-friend}\")) | .browser_download_url")
-    URLS=$(curl --insecure -s https://api.github.com/repos/pocopico/tcrpfriend/releases/latest | jq -r ".assets[].browser_download_url")
-    for file in $URLS; do curl --insecure --location --progress-bar "$file" -O; done
+    URLS=$(curlx --insecure -s https://api.github.com/repos/pocopico/tcrpfriend/releases/latest | jq -r ".assets[].browser_download_url")
+    for file in $URLS; do curlx --insecure --location --progress-bar "$file" -O; done
 
     if [ -f bzImage-friend ] && [ -f initrd-friend ] && [ -f chksum ]; then
         FRIENDVERSION="$(grep VERSION chksum | awk -F= '{print $2}')"
@@ -3270,10 +3286,10 @@ function getlatestrploader() {
 
     echo -n "Checking if a newer version exists on the $build repo -> "
 
-    curl --insecure -s --location "$rploaderfile" --output latestrploader.sh
-    curl --insecure -s --location "$modalias3" --output modules.alias.3.json.gz
+    curlx --insecure -s --location "$rploaderfile" --output latestrploader.sh
+    curlx --insecure -s --location "$modalias3" --output modules.alias.3.json.gz
     [ -f modules.alias.3.json.gz ] && gunzip -f modules.alias.3.json.gz
-    curl --insecure -s --location "$modalias4" --output modules.alias.4.json.gz
+    curlx --insecure -s --location "$modalias4" --output modules.alias.4.json.gz
     [ -f modules.alias.4.json.gz ] && gunzip -f modules.alias.4.json.gz
 
     CURRENTSHA="$(sha256sum rploader.sh | awk '{print $1}')"
@@ -3354,7 +3370,7 @@ function getvars() {
     CONFIG=$(readConfig)
     selectPlatform $1
 
-    GETTIME=$(curl --insecure -v --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
+    GETTIME=$(curl --insecure -v --silent https://baidu.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
     INTERNETDATE=$(date +"%d%m%Y" -d "$GETTIME")
     LOCALDATE=$(date +"%d%m%Y")
 
@@ -3389,7 +3405,7 @@ function getvars() {
 
         echo "bspatch does not exist, bringing over from repo"
 
-        curl --insecure --location "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/tools/bspatch" -O
+        curlx --insecure --location "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/tools/bspatch" -O
 
         chmod 777 bspatch
         sudo mv bspatch /usr/local/bin/
@@ -3603,7 +3619,7 @@ function listmodules() {
 function listextension() {
 
     if [ ! -f rpext-index.json ]; then
-        curl --insecure --progress-bar --location "${modextention}" --output rpext-index.json
+        curlx --insecure --progress-bar --location "${modextention}" --output rpext-index.json
     fi
 
     ## Get extension author rpext-index.json and then parse for extension download with :
@@ -3658,8 +3674,11 @@ if [ -z "$GATEWAY_INTERFACE" ]; then
 
         getvars $2
         checkinternet
-        getlatestrploader
+        #getlatestrploader
         gitdownload
+
+        # 拷贝修改后的file.sh到/redpill-load目录
+        sudo cp ./file.sh ./redpill-load/include/
 
         [ "$3" = "withfriend" ] && echo "withfriend option set, My friend will be added" && WITHFRIEND="YES"
 
@@ -3760,7 +3779,7 @@ if [ -z "$GATEWAY_INTERFACE" ]; then
         if [ -f interactive.sh ]; then
             . ./interactive.sh
         else
-            curl --insecure --location --progress-bar "https://github.com/pocopico/tinycore-redpill/raw/$build/interactive.sh" --output interactive.sh
+            curlx --insecure --location --progress-bar "https://github.com/pocopico/tinycore-redpill/raw/$build/interactive.sh" --output interactive.sh
             . ./interactive.sh
             exit 99
         fi
